@@ -32,6 +32,14 @@ const path=require("node:path");
  assert.deepEqual(errors,[]);
  await page.setViewportSize({width:390,height:844});await page.reload();await page.locator("#worldCanvas svg").waitFor();
  assert.equal(await page.locator("#worldCanvas svg").count(),1);assert.deepEqual(errors,[]);
+ await page.goto(pathToFileURL(path.join(__dirname,"..","future.html")).href);
+ await page.locator("#art svg").waitFor();
+ assert.match(await page.locator("#metrics").innerText(),/Annual generation/i);
+ await page.locator('[data-preset="both"]').click();
+ assert.match(await page.locator("#water").innerText(),/Battery runtime/i);
+ await page.locator("#dualArea").fill("1000000");
+ assert.match(await page.locator("#warning").innerText(),/dualArea/i);
+ assert.deepEqual(errors,[]);
  console.log("Desktop and mobile browser smoke checks passed");
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
