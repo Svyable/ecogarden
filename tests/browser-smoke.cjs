@@ -8,7 +8,16 @@ const path=require("node:path");
  const page=await browser.newPage({viewport:{width:1440,height:1000}});
  const errors=[];page.on("pageerror",err=>errors.push(String(err)));
  const url=pathToFileURL(path.join(__dirname,"..","generator.html")).href;
+ await page.goto(pathToFileURL(path.join(__dirname,"..","index.html")).href);
+ await page.locator("#heroArt svg").waitFor();
+ await page.locator("#launchSeasons button").nth(3).click();
+ assert.match(await page.locator("#launchSeasonLabel").innerText(),/Winter/i);
  await page.goto(url);await page.locator("#worldCanvas svg").waitFor();
+ assert.equal(await page.locator("#evidenceYields tr").count(),4);
+ await page.locator("#regionalYields").click();
+ assert.match(await page.locator("#yieldStatus").innerText(),/Applied USDA/i);
+ assert.ok(Math.abs(Number(await page.locator("#yield-tomatoes").inputValue())-297.16)<.01);
+ 
  assert.equal(await page.locator("#worldMonths button").count(),12);
  assert.ok(await page.locator("#riskMetrics").innerText().then(s=>s.includes("Stressed crop sales")));
  assert.ok(await page.locator("#waterMetrics").innerText().then(s=>s.includes("Monthly irrigation")));
