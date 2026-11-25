@@ -33,3 +33,20 @@ test("area, exclusion, startup cap, monthly cash and seasonal SVG across six pro
  `;
  assert.equal(new Function(code)(),648);
 });
+
+test("published yield conversion and protected floor-area calculation",()=>{
+ const a=require("../agronomy-data.js");
+ assert.ok(Math.abs(a.fieldUnits("tomatoes")*43.56*.72-9320)<1e-6);
+ assert.ok(Math.abs(a.fieldUnits("greens")*43.56*.72*.25-6020)<1e-6);
+ assert.equal(a.protectedTomatoes(1000,2,.65),1300);
+ assert.equal(a.planting("garlic",300).low,600);
+ assert.throws(()=>a.protectedTomatoes(1000,6,.65),RangeError);
+});
+test("protected tomato benchmark overrides only protected tomato revenue",()=>{
+ const fn=new Function(between("function blockGross","function generate")+";return blockGross")();
+ const tomato={kind:"protected",area:1000,crop:["tomatoes",0,0,0,0,0,0,0,0,1000]};
+ const f={protectedTomatoRate:2,protectedFloor:65,protectedTomatoPrice:4.5};
+ assert.equal(fn(tomato,f,.65,1.15),5850);
+ assert.equal(fn({...tomato,kind:"field"},f,.72,1),720);
+ assert.equal(fn(tomato,{...f,protectedTomatoRate:0},.65,1),650);
+});
