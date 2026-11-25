@@ -4,7 +4,7 @@ One-acre farm-development atlas for coastal New England. A dependency-free, mobi
 
 ## Publish
 
-Open [index.html](index.html) locally in a modern browser. In GitHub, go to Settings → Pages → Build and deployment → Deploy from a branch → main → /(root) → Save. The expected project URL is https://svyable.github.io/ecogarden/ once deployment succeeds. No API keys, build steps, external artwork or dependencies required.
+Open [index.html](index.html) locally in a modern browser. GitHub Pages now uses GitHub Actions (Settings → Pages → Source: GitHub Actions). The checks workflow publishes a staged static artifact only after model and desktop/mobile browser tests pass. No docs folder is required. Public project URL: https://svyable.github.io/ecogarden/. No API keys, build steps, external artwork or dependencies required.
 
 ## Base case (illustrative USD)
 
@@ -57,3 +57,7 @@ The studio includes deterministic stress testing for the selected year (saleable
 Run `node --test tests/planning.test.cjs` with Node 22. For browser tests, run `npm install --no-save --no-package-lock playwright`, `npx playwright install chromium`, then `node tests/browser-smoke.cjs`. The GitHub Actions workflow runs both suites on pushes and pull requests. Eight deterministic test cases passed in a connector-side JavaScript test harness, including 648 seasonal SVG checks and six ten-year model scenarios; actual GitHub Actions and browser results are not yet verified. No third-party climate/market requests are made by the smoke tests.
 
 Development sequence: maintain automated model/browser checks first; then improve operational realism (crop-specific water/soil data, weekly tasks, livestock accounting), followed by parcel geometry, validated land and market sources, and constrained multi-year investment planning. Keep every financial and agronomic assumption explicit.
+
+## Pages release and agricultural calibration
+
+The homepage now offers three entry paths (surprise farm, property studio and curated blueprint collection) with an interactive four-season landscape. The studio includes a source-backed crop evidence ledger, an optional field yield calibration for four crops and planting stock estimates for five crops. An independent protected-tomato yield target of 1–5 lb per covered square foot can be selected; the covered share is editable. Other crop prices, costs, labor and yield factors remain hypotheses. Sources and caveats: [AGRONOMY.md](AGRONOMY.md). The deployment workflow stages only static public files and deploys to the github-pages environment after tests. Initial Pages deployments and the redesigned homepage run succeeded; newer calibration and smoke-test updates trigger new runs.
