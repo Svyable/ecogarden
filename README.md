@@ -46,3 +46,14 @@ Budget regression check: 21 combinations of seven starting cash amounts and thre
 The generator now opens with an original interactive procedural farm visualization: isometric, aerial and pre-construction views, daylight/golden-hour/moonlight palettes, month-by-month playback and selectable years. Each depicted block comes from the chosen year’s acreage allocation, with selectable land-use detail, harvest windows, modeled monthly sales/costs/cash, and farmer tasks. The atlas can expand and export an SVG. The monthly cash-flow chart and multiyear land-allocation chart derive from the existing financial and rotation models. Art is illustrative, not a photorealistic reconstruction, surveyed landscape, actual weather forecast or buildable structure plan; the pre-construction view leaves the planned financial scenario unchanged.
 
 Visual-model regression check: 648 SVG renders across six configurations (including tiny, mixed-livestock, excluded-crop, zero-budget and hot-climate examples), three years, four months, three view modes and three lighting modes passed area and finite-output checks. JavaScript syntax compiled; complete browser and live Pages testing remain outstanding.
+
+
+## Resilience and operational capacity
+
+The studio includes deterministic stress testing for the selected year (saleable harvest losses, price reductions, input and labor inflation, and a one-off emergency expense), with baseline/stressed cash traces and CSV export. It also includes monthly irrigation sizing from editable water targets, net planted area, rain credit, and application efficiency; protected crops receive no rainfall credit. Storage sizing is illustrative. The crop labor chart compares each month's modeled hours against user-entered weekly capacity; it does not assume spare hours can be transferred between months. No crop-specific water recommendations, water-source capacity, animal water/labor, or probability of adverse scenarios are implied.
+
+## Verification
+
+Run `node --test tests/planning.test.cjs` with Node 22. For browser tests, run `npm install --no-save --no-package-lock playwright`, `npx playwright install chromium`, then `node tests/browser-smoke.cjs`. The GitHub Actions workflow runs both suites on pushes and pull requests. Eight deterministic test cases passed in a connector-side JavaScript test harness, including 648 seasonal SVG checks and six ten-year model scenarios; actual GitHub Actions and browser results are not yet verified. No third-party climate/market requests are made by the smoke tests.
+
+Development sequence: maintain automated model/browser checks first; then improve operational realism (crop-specific water/soil data, weekly tasks, livestock accounting), followed by parcel geometry, validated land and market sources, and constrained multi-year investment planning. Keep every financial and agronomic assumption explicit.
