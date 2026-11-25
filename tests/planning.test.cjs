@@ -50,3 +50,10 @@ test("protected tomato benchmark overrides only protected tomato revenue",()=>{
  assert.equal(fn({...tomato,kind:"field"},f,.72,1),720);
  assert.equal(fn(tomato,{...f,protectedTomatoRate:0},.65,1),650);
 });
+
+test("future farm solar overlap, crop sensitivity, battery and rain capture",()=>{
+ const {model}=require("../future-systems.js");
+ const f={mode:"both",acres:1,fieldArea:20000,roofArea:1000,dualArea:10000,roofPanel:70,dualPanel:25,wattsPerSqft:20,specificYield:1200,loadKwh:30000,selfUse:50,retailRate:.25,exportRate:.05,roofCost:3,dualCost:5,batteryKwh:20,batteryCost:700,batteryUsable:80,criticalKw:2,fieldRevenue:30000,cropChange:-20,omPct:1,catchment:1000,rainInches:45,capture:80,waterCapital:1000,otherCapital:0,otherAnnual:0,availableCash:50000};
+ const r=model(f);assert.equal(r.kw,64);assert.equal(r.annual,76800);assert.equal(r.self,30000);assert.equal(r.cropDelta,-3000);assert.equal(r.hours,8);assert.ok(Math.abs(r.water-22428)<1e-6);assert.equal(r.shortfall,257000);
+ const off=model({...f,mode:"none",batteryKwh:0});assert.equal(off.kw,0);assert.equal(off.cropDelta,0);assert.throws(()=>model({...f,dualArea:21000}),RangeError);assert.throws(()=>model({...f,roofArea:30000}),RangeError);
+});
