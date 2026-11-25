@@ -57,3 +57,25 @@ test("future farm solar overlap, crop sensitivity, battery and rain capture",()=
  const r=model(f);assert.equal(r.kw,64);assert.equal(r.annual,76800);assert.equal(r.self,30000);assert.equal(r.cropDelta,-3000);assert.equal(r.hours,8);assert.ok(Math.abs(r.water-22428)<1e-6);assert.equal(r.shortfall,257000);
  const off=model({...f,mode:"none",batteryKwh:0});assert.equal(off.kw,0);assert.equal(off.cropDelta,0);assert.throws(()=>model({...f,dualArea:21000}),RangeError);assert.throws(()=>model({...f,roofArea:30000}),RangeError);
 });
+
+test("property economics accounts for usable acreage and reserve",()=>{
+ const M=require("../studio-models.js");const p=M.property({acres:40,price:400000,closing:10000,site:20000,cash:450000,reserve:30000,usable:17.5});
+ assert.equal(p.usableArea,7*43560);assert.ok(Math.abs(p.pricePerUsableAcre-430000/7)<1e-8);assert.equal(p.gap,10000);
+});
+test("architect rejects overlapping and out-of-bounds blocks and accepts adjacent blocks",()=>{
+ const M=require("../studio-models.js"),a={name:"A",x:0,y:0,w:20,h:20},b={name:"B",x:20,y:0,w:20,h:20};
+ assert.equal(M.layout(1,1,[a,b]).valid,true);
+ assert.equal(M.layout(1,1,[a,{...b,x:19}]).valid,false);
+ assert.equal(M.layout(1,1,[{...b,x:500}]).valid,false);
+});
+test("livestock benchmark and year-end expansion accounting",()=>{
+ const M=require("../studio-models.js"),e=M.enterprise({kind:"hens",count:12,yield:187,sell:100,price:6,feedQty:91.25,feedPrice:.4,other:0,hours:0,wage:24,capital:1000});
+ assert.equal(e.units,187);assert.equal(e.revenue,1122);
+ const f=M.expansion({cash:10000,reserve:5000,area:100,maxArea:1000,cost:10,margin:2,base:1000,rate:50,annualCap:2000,years:10});let previous=100;
+ for(const y of f.rows){assert.ok(y.area<=1000+.0001);assert.ok(y.closing>=5000);assert.ok(Math.abs(y.opening+y.operating-y.investment-y.closing)<1e-8);assert.ok(Math.abs(y.area-previous-y.built)<1e-8);previous=y.area}
+ const loss=M.expansion({cash:5000,reserve:5000,area:100,maxArea:1000,cost:10,margin:0,base:-1000,rate:100,annualCap:2000,years:1});assert.equal(loss.rows[0].investment,0);assert.equal(loss.rows[0].gap,1000);
+});
+test("soil comparisons only use matching sample location, depth and method",()=>{
+ const M=require("../studio-models.js"),a={date:"2025-01-01",block:"A",depth:15,method:"lab",om:2,infiltration:1};
+ const r=M.soilChanges([a,{...a,date:"2026-01-01",om:3},{...a,date:"2026-01-02",depth:30,om:9}]);assert.equal(r[1].deltaOM,1);assert.equal(r[2].deltaOM,null);
+});
