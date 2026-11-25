@@ -1,14 +1,20 @@
 const {chromium}=require("playwright");
 const assert=require("node:assert/strict");
-const {pathToFileURL}=require("node:url");
+const http=require("node:http");
+const fs=require("node:fs/promises");
 const path=require("node:path");
 (async()=>{
- const browser=await chromium.launch({headless:true});
+ const root=path.resolve(__dirname,"..");
+ const server=http.createServer(async(req,res)=>{try{let u=new URL(req.url,"http://localhost"),name=decodeURIComponent(u.pathname),file=path.resolve(root,"."+name);if(!file.startsWith(root+path.sep))throw Error("Invalid path");let data=await fs.readFile(file);res.writeHead(200,{"Content-Type":file.endsWith(".js")?"text/javascript; charset=utf-8":file.endsWith(".html")?"text/html; charset=utf-8":"application/octet-stream"});res.end(data)}catch{res.writeHead(404);res.end("Not found")}});
+ await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
+ const site="http://127.0.0.1:"+server.address().port+"/";
+ let browser;
  try{
+ browser=await chromium.launch({headless:true});
  const page=await browser.newPage({viewport:{width:1440,height:1000}});
  const errors=[];page.on("pageerror",err=>errors.push(String(err)));
- const url=pathToFileURL(path.join(__dirname,"..","generator.html")).href;
- await page.goto(pathToFileURL(path.join(__dirname,"..","index.html")).href);
+ const url=site+"generator.html";
+ await page.goto(site+"index.html");
  await page.locator("#heroArt svg").waitFor();
  await page.locator("#launchSeasons button").nth(3).click();
  assert.match(await page.locator("#launchSeasonLabel").innerText(),/Winter/i);
@@ -32,7 +38,7 @@ const path=require("node:path");
  assert.deepEqual(errors,[]);
  await page.setViewportSize({width:390,height:844});await page.reload();await page.locator("#worldCanvas svg").waitFor();
  assert.equal(await page.locator("#worldCanvas svg").count(),1);assert.deepEqual(errors,[]);
- await page.goto(pathToFileURL(path.join(__dirname,"..","future.html")).href);
+ await page.goto(site+"future.html");
  await page.locator("#art svg").waitFor();
  assert.match(await page.locator("#metrics").innerText(),/Annual generation/i);
  await page.locator('[data-preset="both"]').click();
@@ -40,7 +46,7 @@ const path=require("node:path");
  await page.locator("#dualArea").fill("1000000");
  assert.match(await page.locator("#warning").innerText(),/dualArea/i);
  assert.deepEqual(errors,[]);
- await page.goto(pathToFileURL(path.join(__dirname,"..","fieldwork.html")).href);
+ await page.goto(site+"fieldwork.html");
  await page.locator("#parcelMap svg").waitFor();await page.locator("#isoArt svg").waitFor();
  assert.match(await page.locator("#layoutStatus").innerText(),/No overlaps/i);
  await page.locator('[data-example="crandall"]').click();
@@ -64,5 +70,5 @@ const path=require("node:path");
  assert.equal(await page.locator("#acres").inputValue(),"40.013");
  assert.deepEqual(errors,[]);
  console.log("Desktop and mobile browser smoke checks passed");
- }finally{await browser.close()}
+ }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
 })().catch(e=>{console.error(e);process.exitCode=1});
