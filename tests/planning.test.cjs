@@ -79,3 +79,15 @@ test("soil comparisons only use matching sample location, depth and method",()=>
  const M=require("../studio-models.js"),a={date:"2025-01-01",block:"A",depth:15,method:"lab",om:2,infiltration:1};
  const r=M.soilChanges([a,{...a,date:"2026-01-01",om:3},{...a,date:"2026-01-02",depth:30,om:9}]);assert.equal(r[1].deltaOM,1);assert.equal(r[2].deltaOM,null);
 });
+
+test("consolidated ledger charges capital once, recognizes selling season and reserve breach",()=>{
+ const L=require("../farm-ledger.js"),months=Array.from({length:12},()=>({sales:1000,cost:500}));
+ const r=L.forecast({cash:50000,property:10000,baseCap:15000,reserve:5000,months,items:[{name:"Honey",revenue:1200,cost:600,cap:1000,start:7,end:8}]});
+ assert.equal(r.opening,24000);assert.equal(r.net,6600);assert.equal(r.closing,30600);assert.equal(r.rows[5].extraSales,0);assert.equal(r.rows[6].extraSales,600);assert.equal(r.rows[7].extraSales,600);assert.equal(r.rows[8].extraSales,0);assert.equal(r.reserveGap,0);
+ let drought=L.forecast({cash:6000,property:0,baseCap:1000,reserve:4000,months:Array.from({length:12},()=>({sales:0,cost:500})),items:[{name:"Autumn crop",revenue:12000,cost:0,cap:0,start:10,end:10}]});assert.equal(drought.net,6000);assert.equal(drought.firstReserveBreach,3);assert.equal(drought.reserveGap,3500);
+ assert.throws(()=>L.forecast({cash:0,property:0,baseCap:0,reserve:0,months,items:[{name:"Invalid",revenue:0,cost:0,cap:0,start:11,end:2}]}),RangeError);
+});
+test("blueprint import conserves area and preserves service and protected types",()=>{
+ const L=require("../farm-ledger.js"),d={version:1,name:"Test",acres:1,width:198,depth:220,cash:10000,property:0,baseCap:1000,reserve:5000,months:Array.from({length:12},()=>({sales:0,cost:0})),blocks:[{name:"Access",kind:"service",area:4356},{name:"Tunnel",kind:"protected",area:8712},{name:"Beds",kind:"field",area:30492}]};
+ let blocks=L.strips(d);assert.equal(blocks[0].kind,"service");assert.equal(blocks[1].kind,"tunnel");assert.ok(Math.abs(blocks.reduce((s,b)=>s+b.w*b.h,0)-43560)<.001);assert.ok(Math.abs(blocks[2].y+blocks[2].h-220)<.001);assert.throws(()=>L.strips({...d,width:100}),/acreage mismatch/);
+});
