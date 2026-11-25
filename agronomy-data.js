@@ -1,0 +1,8 @@
+/* Regional reference data; UMass / USDA NASS 2020–24 and UMN Extension. */
+(function(root){const field={tomatoes:{lb:9320,unitWeight:1,label:"Field tomatoes (specialty proxy)"},peppers:{lb:5820,unitWeight:1,label:"Other peppers"},greens:{lb:6020,unitWeight:.25,label:"Leaf lettuce (4 oz bag proxy)"},garlic:{lb:2300,unitWeight:.125,label:"Garlic (2 oz bulb assumption)"}};
+const cycle={tomatoes:[75,75,"transplants"],peppers:[150,170,"transplants"],greens:[2000,3000,"seeds"],garlic:[600,600,"cloves"],strawberries:[200,300,"day-neutral plants"]};
+const sources={yield:"https://nevegetable.org/cultural-practices/estimating-vegetable-yields",tunnel:"https://nevegetable.org/crops/tomato-greenhouse-and-high-tunnel",cycle:"https://extension.umn.edu/vegetable-growing-guides-farmers/crop-and-field-planning-tools-vegetable-farmers"};
+function fieldUnits(id,netFraction=.72){const d=field[id];if(!d||!Number.isFinite(netFraction)||netFraction<=0||netFraction>1)throw RangeError("Invalid field benchmark");return d.lb/43560*1000/netFraction/d.unitWeight}
+function protectedTomatoes(area,rate,coveredFraction){if(!Number.isFinite(area)||area<0||!Number.isFinite(rate)||rate<1||rate>5||!Number.isFinite(coveredFraction)||coveredFraction<=0||coveredFraction>1)throw RangeError("Invalid protected tomato benchmark");return area*coveredFraction*rate}
+function planting(id,netArea){const d=cycle[id];if(!d||!Number.isFinite(netArea)||netArea<0)throw RangeError("Invalid planting estimate");const feet=netArea/3;return {feet,low:Math.ceil(feet/100*d[0]),high:Math.ceil(feet/100*d[1]),material:d[2]}}
+const api={field,cycle,sources,fieldUnits,protectedTomatoes,planting};if(typeof module==="object"&&module.exports)module.exports=api;else root.EcoGardenEvidence=api})(globalThis);
